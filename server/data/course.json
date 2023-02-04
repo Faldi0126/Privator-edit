@@ -1,0 +1,22 @@
+[
+  {
+    "name": "Piano",
+    "detail": "Beginner friendly",
+    "level": "Beginner",
+    "price": 300000,
+    "imgUrl": "https://qtxasset.com/quartz/qcloud1/media/image/luxurytraveladvisor/1522417035/KokomoResidence.jpg/KokomoResidence.jpg?VersionId=CJcFK5Jo45znPfzQfEygAn9FpQ2H0wBg",
+    "type": "Offline",
+    "CategoryId": 3,
+    "InstructorId": "1"
+  },
+  {
+    "name": "Math101",
+    "detail": "Beginner friendly",
+    "level": "Beginner",
+    "price": 300000,
+    "imgUrl": "https://qtxasset.com/quartz/qcloud1/media/image/luxurytraveladvisor/1522417035/KokomoResidence.jpg/KokomoResidence.jpg?VersionId=CJcFK5Jo45znPfzQfEygAn9FpQ2H0wBg",
+    "type": "Online",
+    "CategoryId": 1,
+    "InstructorId": "2"
+  }
+]

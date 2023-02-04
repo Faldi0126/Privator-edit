@@ -1,0 +1,40 @@
+[
+  {
+    "email": "instructor@mail.com",
+    "password": "12345",
+    "fullName": "Instructor",
+    "bio": "Instructor yang halu",
+    "role": "instructor",
+    "birthDate": "1997-07-13",
+    "phoneNumber": "086969696969",
+    "address": "Jalan kesejahteraan",
+    "profilePicture": "https://media.istockphoto.com/id/1213840216/photo/luxury-travel-romantic-couple-in-beach-hotel.jpg?b=1&s=612x612&w=0&k=20&c=io3av54KBbpkMIv8yKOIwINbA-NPfZ9PE3Ee5AaE1CA=",
+    "location": "Jakarta",
+    "geometry": {
+      "type": "Point",
+      "coordinates": [
+        106.8333184799405,
+        -6.193425194741608
+      ]
+    }
+  },
+  {
+    "email": "tutor@mail.com",
+    "password": "12345",
+    "fullName": "tutor",
+    "bio": "Instructor dhahakjhdkjshfkhdsafjsadf",
+    "role": "instructor",
+    "birthDate": "1997-07-13",
+    "phoneNumber": "086969696969",
+    "address": "Jalan kesejahteraan",
+    "profilePicture": "https://media.istockphoto.com/id/1213840216/photo/luxury-travel-romantic-couple-in-beach-hotel.jpg?b=1&s=612x612&w=0&k=20&c=io3av54KBbpkMIv8yKOIwINbA-NPfZ9PE3Ee5AaE1CA=",
+    "location": "Jakarta Pusat",
+    "geometry": {
+      "type": "Point",
+      "coordinates": [
+        106.8333184799405,
+        -6.193425194741608
+      ]
+    }
+  }
+]
