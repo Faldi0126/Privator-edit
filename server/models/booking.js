@@ -11,12 +11,14 @@ module.exports = (sequelize, DataTypes) => {
       // define association here
       Booking.belongsTo(models.Student);
       Booking.belongsTo(models.Course);
+      Booking.belongsTo(models.Instructor);
     }
   }
   Booking.init(
     {
       StudentId: DataTypes.INTEGER,
       CourseId: DataTypes.INTEGER,
+      InstructorId: DataTypes.INTEGER,
       status: {
         type: DataTypes.STRING,
         allowNull: false,

@@ -25,6 +25,14 @@ module.exports = {
           key: 'id',
         },
       },
+      InstructorId: {
+        allowNull: false,
+        type: Sequelize.INTEGER,
+        references: {
+          model: 'Instructors',
+          key: 'id',
+        },
+      },
       status: {
         allowNull: false,
         type: Sequelize.STRING,

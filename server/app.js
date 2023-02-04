@@ -34,6 +34,52 @@ const multer = require('multer');
 const { storage } = require('./cloudinary/index');
 const upload = multer({ storage });
 
+//! Student Authentification
+const authenticationStudent = async (req, res, next) => {
+  try {
+    const { access_token } = req.headers;
+
+    if (!access_token) throw { name: 'Invalid token' };
+
+    let { payload } = jwt.verify(access_token, process.env.JWT_SECRET);
+
+    let student = await Student.findByPk(payload.id);
+
+    req.student = { id: student.id };
+
+    if (!student) throw { name: 'Invalid token' };
+
+    next();
+  } catch (error) {
+    next(error);
+  }
+};
+
+//!  Instructor Authentification
+const authenticationInstructor = async (req, res, next) => {
+  try {
+    const { access_token } = req.headers;
+
+    if (!access_token) throw { name: 'Invalid token' };
+
+    let { payload } = jwt.verify(access_token, process.env.JWT_SECRET);
+
+    console.log(payload.id);
+
+    let instructor = await Instructor.findByPk(payload.id);
+
+    req.instructor = { id: instructor.id };
+
+    if (!instructor) throw { name: 'Invalid token' };
+
+    next();
+  } catch (error) {
+    next(error);
+  }
+};
+
+//!------------------------------------------------------------
+
 //? Register Student
 app.post(
   '/student/register',
@@ -150,7 +196,7 @@ app.post(
   }
 );
 
-//? Login Student
+//? Login Instructor
 app.post('/instructor/login', async (req, res, next) => {
   try {
     if (!req.body.email) throw { name: 'Email is required' };
@@ -193,8 +239,61 @@ app.get('/instructor', async (req, res, next) => {
     const instructors = await Instructor.findAll({
       include: [
         {
+          model: Course,
+          attributes: [
+            'name',
+            'detail',
+            'price',
+            'imgUrl',
+            'type',
+            'CategoryId',
+            'level',
+          ],
+        },
+      ],
+      attributes: [
+        'id',
+        'role',
+        'fullName',
+        'bio',
+        'profilePicture',
+        'location',
+        'phoneNumber',
+        'email',
+        'geometry',
+      ],
+    });
+    res.status(200).json(instructors);
+  } catch (error) {
+    next(error);
+  }
+});
+
+//? Get Instructor By Id (for mentor page)
+app.get('/instructor/:id', authenticationInstructor, async (req, res, next) => {
+  try {
+    const instructor = await Instructor.findByPk(req.params.id, {
+      include: [
+        {
+          model: Course,
+          attributes: [
+            'name',
+            'detail',
+            'price',
+            'imgUrl',
+            'type',
+            'CategoryId',
+            'level',
+          ],
+          include: [
+            {
+              model: Category,
+              attributes: ['name'],
+            },
+          ],
+        },
+        {
           model: Schedule,
-          Course,
           attributes: ['time'],
           include: [
             {
@@ -206,18 +305,152 @@ app.get('/instructor', async (req, res, next) => {
       ],
       attributes: [
         'id',
+        'role',
         'fullName',
         'bio',
         'profilePicture',
         'location',
         'phoneNumber',
+        'email',
+        'geometry',
       ],
     });
-    res.status(200).json(instructors);
+
+    if (!instructor) throw { name: 'Instructor not found' };
+    res.status(200).json(instructor);
   } catch (error) {
     next(error);
   }
 });
+
+//!-----------------------------------------------------------------------------------
+
+//? Get All Courses
+app.get('/course', async (req, res, next) => {
+  try {
+    const courses = await Course.findAll({
+      include: [
+        {
+          model: Instructor,
+          attributes: ['fullName', 'profilePicture', 'location'],
+        },
+        {
+          model: Category,
+          attributes: ['name'],
+        },
+      ],
+      attributes: [
+        'id',
+        'name',
+        'detail',
+        'price',
+        'imgUrl',
+        'type',
+        'CategoryId',
+        'level',
+      ],
+    });
+    res.status(200).json(courses);
+  } catch (error) {
+    next(error);
+  }
+});
+
+//? Get Course By Id
+app.get('/course/:id', async (req, res, next) => {
+  try {
+    const course = await Course.findByPk(req.params.id, {
+      include: [
+        {
+          model: Category,
+          attributes: ['name'],
+        },
+        {
+          model: Instructor,
+          attributes: ['fullName', 'profilePicture', 'location'],
+        },
+      ],
+      attributes: [
+        'id',
+        'name',
+        'detail',
+        'price',
+        'imgUrl',
+        'type',
+        'CategoryId',
+        'level',
+      ],
+    });
+
+    if (!course) throw { name: 'Course not found' };
+    res.status(200).json(course);
+  } catch (error) {
+    next(error);
+  }
+});
+
+//? Get Course By Category
+app.get('/course/category/:id', async (req, res, next) => {
+  try {
+    const courses = await Course.findAll({
+      where: {
+        CategoryId: req.params.id,
+      },
+      include: [
+        {
+          model: Instructor,
+          attributes: ['fullName', 'profilePicture', 'location'],
+        },
+        {
+          model: Category,
+          attributes: ['name'],
+        },
+      ],
+      attributes: [
+        'id',
+        'name',
+        'detail',
+        'price',
+        'imgUrl',
+        'type',
+        'CategoryId',
+        'level',
+      ],
+    });
+
+    if (courses.length === 0) throw { name: 'No Course in this Category' };
+    res.status(200).json(courses);
+  } catch (error) {
+    next(error);
+  }
+});
+
+//? Add Course
+app.post('/course', authenticationInstructor, async (req, res, next) => {
+  try {
+    console.log(req.instructor);
+    const { name, detail, price, imgUrl, type, CategoryId, level } = req.body;
+
+    const course = await Course.create({
+      name,
+      detail,
+      price,
+      imgUrl,
+      type,
+      CategoryId,
+      level,
+      InstructorId: req.instructor.id,
+    });
+
+    res.status(201).json(course);
+  } catch (error) {
+    next(error);
+  }
+});
+
+//!-----------------------------------------------------------------------------------------
+
+//!----------------------------------------------------------------------------------------
 
 //! Error Handling
 app.use((err, req, res, next) => {
@@ -242,6 +475,18 @@ app.use((err, req, res, next) => {
     message = err.name;
   } else if (err.name === 'Invalid email or password') {
     statusCode = 401;
+    message = err.name;
+  } else if (err.name === 'JsonWebTokenError' || err.name === 'Invalid token') {
+    statusCode = 401;
+    message = err.name;
+  } else if (
+    err.name === 'Instructor not found' ||
+    err.name === 'Course not found'
+  ) {
+    statusCode = 404;
+    message = err.name;
+  } else if (err.name === 'No Course in this Category') {
+    statusCode = 404;
     message = err.name;
   }
 
