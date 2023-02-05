@@ -390,8 +390,20 @@ app.get('/course/:id', async (req, res, next) => {
   }
 });
 
+//? Get all Category
+app.get('course/categories', async (req, res, next) => {
+  try {
+    const categories = await Category.findAll({
+      attributes: ['id', 'name'],
+    });
+    res.status(200).json(categories);
+  } catch (error) {
+    next(error);
+  }
+});
+
 //? Get Course By Category
-app.get('/course/category/:id', async (req, res, next) => {
+app.get('/course/categories/:id', async (req, res, next) => {
   try {
     const courses = await Course.findAll({
       where: {
@@ -431,6 +443,10 @@ app.post('/course', authenticationInstructor, async (req, res, next) => {
   try {
     console.log(req.instructor);
     const { name, detail, price, imgUrl, type, CategoryId, level } = req.body;
+
+    if (!name || !detail || !price || !type || !CategoryId || !level) {
+      throw { name: 'Please fill all the field' };
+    }
 
     const course = await Course.create({
       name,
@@ -502,43 +518,61 @@ app.get('/booking', authenticationStudent, async (req, res, next) => {
 });
 
 //? Pay Booking
-app.patch('/PayBooking/:id', authenticationStudent, async (req, res, next) => {
-  const t = await sequelize.transaction();
-  try {
-    const booking = await Booking.findByPk(req.params.id);
+app.patch(
+  'booking/payBooking/:id',
+  authenticationStudent,
+  async (req, res, next) => {
+    const t = await sequelize.transaction();
+    try {
+      const booking = await Booking.findByPk(req.params.id);
 
-    if (!booking) throw { name: 'Booking not found' };
-
-    if (booking.status === 'Paid') throw { name: 'Already Paid' };
-
-    await Booking.update(
-      {
-        status: 'Paid',
-      },
-      {
+      const scheduleCheck = await Schedule.findAll({
         where: {
-          id: req.params.id,
+          InstructorId: booking.InstructorId,
         },
-      },
-      { transaction: t, returning: true }
-    );
+      });
 
-    let inputSchedule = {
-      StudentId: booking.StudentId,
-      InstructorId: booking.InstructorId,
-      CourseId: booking.CourseId,
-      time: req.body.time,
-    };
+      if (scheduleCheck.length >= 5) throw { name: 'Course is fully booked' };
 
-    await Schedule.create(inputSchedule, { transaction: t, returning: true });
+      for (let schedule of scheduleCheck) {
+        if (req.body.time === schedule.time) {
+          throw { name: 'Time is not available' };
+        }
+      }
 
-    await t.commit();
-    res.status(200).json(booking);
-  } catch (error) {
-    await t.rollback();
-    next(error);
+      if (!booking) throw { name: 'Booking not found' };
+
+      if (booking.status === 'Paid') throw { name: 'Already Paid' };
+
+      await Booking.update(
+        {
+          status: 'Paid',
+        },
+        {
+          where: {
+            id: req.params.id,
+          },
+        },
+        { transaction: t, returning: true }
+      );
+
+      let inputSchedule = {
+        StudentId: booking.StudentId,
+        InstructorId: booking.InstructorId,
+        CourseId: booking.CourseId,
+        time: req.body.time,
+      };
+
+      await Schedule.create(inputSchedule, { transaction: t, returning: true });
+
+      await t.commit();
+      res.status(200).json(booking);
+    } catch (error) {
+      await t.rollback();
+      next(error);
+    }
   }
-});
+);
 
 //!----------------------------------------------------------------------------------------
 
@@ -567,7 +601,7 @@ app.get('/schedule', authenticationInstructor, async (req, res, next) => {
 
 //? Complete Schedule
 app.delete(
-  '/completeSchedule/:id',
+  'schedule/completeSchedule/:id',
   authenticationInstructor,
   async (req, res, next) => {
     const t = await sequelize.transaction();
@@ -643,7 +677,24 @@ app.use((err, req, res, next) => {
   } else if (err.name === 'No Course in this Category') {
     statusCode = 404;
     message = err.name;
+  } else if (err.name === 'Booking not found') {
+    statusCode = 404;
+    message = err.name;
   } else if (err.name === 'Already Paid') {
+    statusCode = 400;
+    message = err.name;
+  } else if (err.name === 'Please fill all the field') {
+    statusCode = 400;
+    message = err.name;
+  } else if (err.name === 'Course is fully booked') {
+    statusCode = 400;
+    message = err.name;
+  } else if (err.name === 'Time is not available') {
+    statusCode = 400;
+    message = err.name;
+  } else if (err.name === 'Schedule not found') {
+    statusCode = 404;
+    message = err.name;
   }
 
   res.status(statusCode).json({ message });

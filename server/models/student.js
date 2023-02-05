@@ -60,18 +60,7 @@ module.exports = (sequelize, DataTypes) => {
       },
       bio: DataTypes.TEXT,
       role: DataTypes.STRING,
-      birthDate: {
-        type: DataTypes.DATE,
-        allowNull: false,
-        validate: {
-          notNull: {
-            msg: 'Birth date is required',
-          },
-          notEmpty: {
-            msg: 'Birth date is required',
-          },
-        },
-      },
+      birthDate: DataTypes.DATE,
       phoneNumber: DataTypes.STRING,
       address: DataTypes.STRING,
       profilePicture: DataTypes.STRING,
